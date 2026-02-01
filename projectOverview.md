@@ -1,4 +1,4 @@
-# Search Sort
+# Insta Sort
 
 ## The project arranges the reels according to the hashtag from the most _viewed, liked, commented, or engaged_ reels to the least. 
 

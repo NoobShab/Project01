@@ -3,115 +3,136 @@
 #include "csvReader.h"
 #include "analyzer.h"
 
-void printHead(){
-    std::cout<< "-------------------Welcome to the `Fitness` Reel Sort-------------------";
-    std::cout<< "\n\t\tSort as per their %Engagements%";
-    std::cout<< "\n------------------------------------------------------------------------\n\n";
+// Helper function to format numbers with commas
+std::string formatNumber(long long num) {
+    std::string str = std::to_string(num);
+    int insertPosition = str.length() - 3;
+    while(insertPosition > 0) {
+        str.insert(insertPosition, ",");
+        insertPosition -= 3;
+    }
+    return str;
 }
 
 int main(){
 
 
     auto reels = CSVReader::readCSV("/Users/shuvojoti/Doc/RSP/GitDemo/Project01/data/reelsArrangement.csv");
-    std::string hashtags;
-
-    // Input
-    printHead();
-    std::cout << "Enter hashtag: ";
-    std::cin >> hashtags;;
-    std::cout << "\n";
-
     auto hashtagTable = Analyze::rankHashtagsByEngagement(reels);
 
-    // if filter empty
-    if(hashtagTable.empty()){
-        std::cout << "No reels found for hashtag: #" << hashtags << '\n' << '\n';
+    std::cout << "\n---------------------------------------------\n";
+    std::cout << "\t\tInstaSort: Fitness\n";
+    std::cout << "Engineering Focused Data Analysis Tool\n";
+    std::cout << "\n---------------------------------------------\n";
+    std::cout << "Total reels processed: " << formatNumber(reels.size()) << '\n';
+    std::cout << "---------------------------------------------\n";
+
+    int choice; 
+
+    bool run = true;
+    while(run){
+
+        std::cout << "[1] Top Hashtags by Engagement\n";
+        std::cout << "[2] Top Emerging Hashtags\n";
+        std::cout << "[3] Hashtag Research\n";
+        std::cout << "[4] Exit\n\n";
+
+        std::cout << "Enter choice: ";
+        std::cin >> choice;
+
+        if(choice == 4) break;
+
+        // for choice[1]: rankedHashtags
+        if(choice == 1){
+            auto ranked = Analyze::getRankedHashtags(hashtagTable);
+
+            std::cout << "\n\t\tInstaSort: High performing hashtags by total engagements\n";
+            // std::cout << "\nHigh Performing hashtags by total engagements\n";
+            std::cout << "----------------------------------------------------------------------------\n";
+            std::cout << std::left << std::setw(6) << "Rank"
+                                   << std::setw(15) << "Hashtag"
+                                   << std::setw(8) << "Reels"
+                                   << std::setw(13) << "Views"
+                                   << "Engagement\n";
+            
+            for(int i = 0; i < std::min(5, static_cast<int>(ranked.size())); i++){
+                std::cout << std::setw(6) << i + 1
+                          << std::setw(15) << ranked[i].hashtag
+                          << std::setw(8) << ranked[i].reelCount
+                          << std::setw(13) << formatNumber(ranked[i].totalViews)
+                          << formatNumber(ranked[i].engagementScore)
+                          << "\n";
+            }
+            std::cout << '\n';
+        }
+
+        // for choice [2] : Emerging Hashtags
+        else if(choice == 2){
+            auto emerging = Analyze::getTopEmergingHashtags(hashtagTable);
+
+            std::cout << "\n\t\tInstaSort: Top ~Emerging~ Hashtags\n\n";
+            std::cout << "--------------------------------------------\n";
+            std::cout << std::left
+                      << std::setw(6) << "Rank"
+                      << std::setw(17) << "Hashtag"
+                      << std::setw(8) << "Reels"
+                      << "Avg Engagement\n";
+            std::cout << "--------------------------------------------\n";
+            
+            for(int i = 0; i < std::min(5, static_cast<int>(emerging.size())); i++){
+                std::cout << std::setw(6) << i + 1
+                          << std::setw(17) << emerging[i].hashtag
+                          << std::setw(8) << emerging[i].stats.reelCount
+                          << std::fixed << std::setprecision(2)
+                          << emerging[i].emergenceScore
+                          << "\n";
+            }
+
+            std::cout << "----------------------------------------------------\n";
+            std::cout << "Insights:\n";
+            std::cout << "* These hashtags concentrate in top 10% of engaging hashtags\n";
+            std::cout << "* A bit different than the conventional ones, these tags are emerging within reach and interaction\n";
+            std::cout << "----------------------------------------------------\n";
+            // std::cout << "====================================================\n";
+
+        }
+        
+        // choice 3: hashtag research
+        else if(choice == 3){
+            // Input
+            std::string hashtags;
+            std::cout << "Enter hashtag: ";
+            std::cin >> hashtags;
+
+
+            auto result = hashtagTable.find(hashtags);
+
+                if(result == hashtagTable.end()){
+                    std::cout << "No data found for #" << hashtags << "\n\n";
+                    continue;
+                }
+                
+                const HashtagStats& stats = (*result).second;
+
+                std::cout << "\n--------------------------------------------\n";
+                std::cout << "\n\t\tInstaSort: Hashtag Analysis\n";
+                std::cout << "--------------------------------------------\n";
+
+                std::cout << "Reels analyzed: " << stats.reelCount << '\n';
+                std::cout << "Total views: " << formatNumber(stats.totalViews) << '\n';
+                std::cout << "Total engagement: " << formatNumber(stats.engagementScore) << '\n' << '\n';
+                std::cout << "Average engagement: " << formatNumber(stats.engagementScore / stats.reelCount) << '\n' << '\n';
+            }
+
+            char cont;
+            std::cout << "Do you wish to continue?\nPress 'y' to continue; 'x' or any other character to exit.\n";
+            std::cin >> cont; 
+
+            cont = std::tolower(cont);
+
+            if(cont != 'y')
+                break;
+        }
+        std::cout << "\nAnalysis complete. Exiting..\n\n";
         return 0;
     }
-
-    // converting hashmap into sortable structure
-    std::vector<std::pair<std::string, HashtagStats>> ranked;
-    for(const auto& entry : hashtagTable) {
-        ranked.push_back(entry);
-    }
-
-    // Table headings
-    std::cout << std::left <<
-              std::setw(6) << "Rank" <<
-              std::setw(22) << "Reel ID" <<
-              std::setw(10) << "Views" <<
-              std::setw(10) << "Likes" <<
-              std::setw(12) << "Comments" <<
-              std::setw(12) << "Engagement" <<
-              '\n';
-std::cout << std::string(40, '-');
-std::cout << '\n';
-
-    
-    std::sort(ranked.begin(), ranked.end(), [](const auto& a, const auto& b){
-        return a.second.engagementScore > b.second.engagementScore;
-    });
-
-    for(int i{0}; i < std::min(5, static_cast<int>(ranked.size())); i++){
-        // const auto& r = filter[i];
-/*
-        if(r.views >= 100000) 
-            std::cout << std::left << std::setw(6)
-                      << r.views/1000 << "K\n";
-        else if(r.views >= 10000 && r.views < 100000) 
-            std::cout << r.views/100 << "K\n";
-        else if(r.views >= 1000 && r.views < 10000) 
-            std::cout << r.views/10 << "K\n"; 
-*/
-
-        std::cout << std::left <<
-                std::setw(6) << (i + 1) <<
-                // std::setw(22) << r.reels_id <<
-                // std::setw(10) << r.views <<
-                // std::setw(10) << r.likes <<
-                // std::setw(12) << r.comments <<
-                // std::setw(12) << r.engagement() <<
-                std::setw(12) << ranked[i].first <<dda
-                ranked[i].second.engagementScore <<
-                '\n';   
-    }
-
-    // Computing stats
-    int totalViews{0}, totalEngagement{0};
-
-    for(const auto& r : filter){
-        totalViews += r.views;
-        totalEngagement += r.engagement();
-    }
-
-    double avgViews = (double)totalViews / filter.size();
-    double avgEngagement = (double)totalEngagement / filter.size();
-
-    // Summary statistics
-    std::cout << std::string(50, '-');
-    std::cout << "\nSummary Statistics:\n\n";
-    std::cout << "* Total reels analyzed: " << filter.size() << '\n';
-    std::cout << "* Average views: " << (int)avgViews << '\n';
-    std::cout << "* Average engagement: " << (int)avgEngagement << '\n';
-
-
-    // Generating insights
-    std::cout << "\nInsights:\n\n";
-
-    if(!filter.empty()){
-        const auto& top = filter[0];
-        std::cout << "* Top reel has " << 
-                    top.engagement() <<
-                    " engagements, which is " << std::setprecision(2) <<
-                    (top.engagement() * 100 / (int) avgEngagement) <<
-                    "% above average.\n\n";
-    }
-
-    if(avgViews >= 100000)
-        std::cout << ">> The hashtag shows strong visibility potential.\n";
-    else if(avgViews >= 0 && avgViews < 100000)
-        std::cout << ">> This hashtag shows moderate visibility.\n";
-
-    return 0;
-    
-}
