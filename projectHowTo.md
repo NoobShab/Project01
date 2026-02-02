@@ -93,4 +93,4 @@ Feel free to opt for the one you desire.
 -------------
 
 > <br>_Thank you for spending your time to check one of my inventions out. If you are interested in self-improvement content and want to help make society a better place, feel free to follow me on instagram(@shab_only)*._<br><br> 
-> ###### _Daily update on how to make yourself better than yesterday :)_
+> ###### *_Daily update on how to make yourself better than yesterday :)_
